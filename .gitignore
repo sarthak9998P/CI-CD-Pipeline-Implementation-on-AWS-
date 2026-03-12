@@ -1,0 +1,8 @@
+*.pem
+*.key
+.env
+.aws/
+__pycache__/
+*.log
+.DS_Store
+node_modules/
