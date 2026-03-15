@@ -1,0 +1,57 @@
+# prometheus.yml - Prometheus Configuration
+# Author: Sarthak Pathade
+# Scrapes metrics from EC2 Node Exporter and application
+
+global:
+  scrape_interval: 15s         # How often to scrape targets
+  evaluation_interval: 15s     # How often to evaluate rules
+  external_labels:
+    project: 'devops-project'
+    environment: 'production'
+
+# ─── Alerting Rules ───────────────────────────────────────
+rule_files:
+  - "alert_rules.yml"
+
+# ─── Alertmanager ─────────────────────────────────────────
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093   # Uncomment when Alertmanager is configured
+
+# ─── Scrape Configs ───────────────────────────────────────
+scrape_configs:
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          instance: 'prometheus-server'
+
+  # EC2 Node Exporter (System metrics: CPU, RAM, Disk, Network)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+          - 'YOUR_EC2_PUBLIC_IP:9100'   # Replace with your EC2 IP
+        labels:
+          instance: 'devops-ec2'
+          environment: 'production'
+    scrape_interval: 10s
+
+  # Application metrics (if app exposes /metrics)
+  - job_name: 'application'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'YOUR_EC2_PUBLIC_IP:8080'   # Replace with your app port
+        labels:
+          instance: 'app-server'
+
+  # CloudWatch Exporter (AWS metrics → Prometheus)
+  - job_name: 'cloudwatch-exporter'
+    static_configs:
+      - targets: ['localhost:9106']
+        labels:
+          source: 'cloudwatch'
